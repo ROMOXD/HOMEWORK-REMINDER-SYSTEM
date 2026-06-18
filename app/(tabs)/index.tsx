@@ -1,98 +1,196 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { BRAND_GREEN } from "@/constants/theme";
+import { ScreenContainer } from "@/components/ScreenContainer";
+import { SubjectFilter } from "@/components/SubjectFilter";
+import { TaskCard } from "@/components/TaskCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTasks } from "@/contexts/TaskContext";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { user } = useAuth();
+  const { tasks } = useTasks();
+  const { colors } = useAppTheme();
+  const [search, setSearch] = useState("");
+  const [subject, setSubject] = useState("All");
+  const [showCompleted, setShowCompleted] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const filteredTasks = useMemo(() => {
+    return tasks
+      .filter((task) => task.completed === showCompleted)
+      .filter((task) => (subject === "All" ? true : task.subject === subject))
+      .filter((task) => {
+        const query = search.trim().toLowerCase();
+        if (!query) return true;
+        return (
+          task.title.toLowerCase().includes(query) ||
+          task.description.toLowerCase().includes(query) ||
+          task.subject.toLowerCase().includes(query)
+        );
+      })
+      .sort(
+        (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
+      );
+  }, [tasks, search, subject, showCompleted]);
+
+  return (
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <ScreenContainer scroll padded={false}>
+        <View style={styles.header}>
+          <View style={styles.headerText}>
+            <Text style={[styles.greeting, { color: colors.text }]}>
+              Hello, {user?.username ?? "User"}
+            </Text>
+            <Text style={[styles.subGreeting, { color: colors.textSecondary }]}>
+              Stay on top of your assignments
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => router.push("/(tabs)/profile")}
+            style={[styles.avatarRing, { borderColor: BRAND_GREEN }]}
+          >
+            <View style={[styles.avatar, { backgroundColor: colors.primaryTint }]}>
+              <Ionicons name="person" size={22} color={BRAND_GREEN} />
+            </View>
+          </Pressable>
+        </View>
+
+        <View style={styles.padded}>
+          <View style={[styles.searchWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <Ionicons name="search" size={18} color={colors.textMuted} />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Search tasks..."
+              placeholderTextColor={colors.textMuted}
+              style={[styles.search, { color: colors.text }]}
+            />
+          </View>
+
+          <SubjectFilter value={subject} onChange={setSubject} />
+
+          <View style={[styles.tabRow, { backgroundColor: colors.inputBg }]}>
+            <Pressable
+              onPress={() => setShowCompleted(false)}
+              style={[
+                styles.tab,
+                !showCompleted && { backgroundColor: colors.primary },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: !showCompleted ? "#FFFFFF" : colors.textSecondary },
+                ]}
+              >
+                Pending Tasks
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setShowCompleted(true)}
+              style={[
+                styles.tab,
+                showCompleted && { backgroundColor: colors.primary },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: showCompleted ? "#FFFFFF" : colors.textSecondary },
+                ]}
+              >
+                Completed Tasks
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={[styles.list, styles.padded]}>
+          {filteredTasks.length === 0 ? (
+            <View style={[styles.empty, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No tasks found
+              </Text>
+              <Text style={{ color: colors.textSecondary, textAlign: "center" }}>
+                {showCompleted
+                  ? "Completed tasks will appear here."
+                  : "Tap + to add your first homework reminder."}
+              </Text>
+            </View>
+          ) : (
+            filteredTasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                variant={showCompleted ? "completed" : "default"}
+              />
+            ))
+          )}
+        </View>
+      </ScreenContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  root: { flex: 1 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  headerText: { flex: 1, gap: 2 },
+  greeting: { fontSize: 26, fontWeight: "800" },
+  subGreeting: { fontSize: 14 },
+  avatarRing: {
+    borderWidth: 2.5,
+    borderRadius: 28,
+    padding: 2,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  padded: { paddingHorizontal: 20, gap: 14 },
+  searchWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  search: { flex: 1, fontSize: 16 },
+  tabRow: {
+    flexDirection: "row",
+    borderRadius: 14,
+    padding: 4,
+    gap: 4,
+  },
+  tab: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  tabText: { fontSize: 13, fontWeight: "700" },
+  list: { gap: 12, paddingBottom: 110 },
+  empty: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 28,
     gap: 8,
+    alignItems: "center",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  emptyTitle: { fontSize: 18, fontWeight: "700" },
 });
