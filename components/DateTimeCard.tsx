@@ -1,4 +1,4 @@
-import { BRAND_GREEN, cardShadow } from "@/constants/theme";
+import { BRAND_GREEN, cardShadow, SPACING } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -26,8 +26,8 @@ export function DateTimeCard({ label, value, icon, onPress }: DateTimeCardProps)
         },
       ]}
     >
-      <View style={[styles.iconWrap, { backgroundColor: `${BRAND_GREEN}18` }]}>
-        <Ionicons name={icon} size={22} color={BRAND_GREEN} />
+      <View style={[styles.iconWrap, { backgroundColor: `${BRAND_GREEN}12` }]}>
+        <Ionicons name={icon} size={20} color={BRAND_GREEN} />
       </View>
       <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
       <Text style={[styles.value, { color: colors.text }]}>
@@ -44,19 +44,19 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
-    gap: 4,
+    borderRadius: 14,
+    padding: SPACING.lg,
+    gap: SPACING.sm,
   },
   iconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
-  label: { fontSize: 12, fontWeight: "600" },
-  value: { fontSize: 16, fontWeight: "800" },
+  label: { fontSize: 12, fontWeight: "600", letterSpacing: 0.3 },
+  value: { fontSize: 16, fontWeight: "600" },
   time: { fontSize: 13, fontWeight: "500" },
 });

@@ -1,4 +1,4 @@
-import { BRAND_GREEN, cardShadow } from "@/constants/theme";
+import { BRAND_GREEN, buttonShadow, SPACING, tabBarShadow } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -14,7 +14,7 @@ type TabConfig = {
 
 const LEFT_TABS: TabConfig[] = [
   { route: "index", icon: "home-outline", iconFocused: "home" },
-  { route: "calendar", icon: "calendar-outline", iconFocused: "calendar" },
+  { route: "chat", icon: "chatbubble-ellipses-outline", iconFocused: "chatbubble-ellipses" },
 ];
 
 const RIGHT_TABS: TabConfig[] = [
@@ -62,7 +62,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={[styles.bar, cardShadow, { backgroundColor: barColor }]}>
+      <View style={[styles.bar, tabBarShadow, { backgroundColor: barColor }]}>
         <View style={styles.sideGroup}>{LEFT_TABS.map(renderTab)}</View>
         <View style={styles.centerSlot} />
         <View style={styles.sideGroup}>{RIGHT_TABS.map(renderTab)}</View>
@@ -71,11 +71,11 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           onPress={() => router.push("/add-task")}
           style={({ pressed }) => [
             styles.centerButton,
-            cardShadow,
+            buttonShadow,
             {
               backgroundColor: BRAND_GREEN,
               borderColor: colors.background,
-              opacity: pressed ? 0.9 : 1,
+              opacity: pressed ? 0.85 : 1,
             },
           ]}
         >
@@ -88,15 +88,15 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.lg,
     backgroundColor: "transparent",
   },
   bar: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 999,
-    height: 64,
-    paddingHorizontal: 12,
+    height: 70,
+    paddingHorizontal: 0,
     position: "relative",
   },
   sideGroup: {
@@ -104,26 +104,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "center",
+    paddingHorizontal: SPACING.lg,
   },
   centerSlot: {
-    width: 72,
+    width: 80,
   },
   tabButton: {
-    padding: 8,
+    padding: SPACING.md,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 12,
   },
   centerButton: {
     position: "absolute",
-    alignSelf: "center",
-    top: -26,
+    top: -30,
     left: "50%",
-    marginLeft: -32,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    transform: [{ translateX: -36 }],
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 4,
+    borderWidth: 5,
   },
 });

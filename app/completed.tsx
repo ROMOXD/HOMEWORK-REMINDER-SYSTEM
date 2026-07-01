@@ -1,5 +1,5 @@
-import { BRAND_GREEN, cardShadow } from "@/constants/theme";
 import { ScreenContainer } from "@/components/ScreenContainer";
+import { BRAND_GREEN, cardShadow } from "@/constants/theme";
 import { useTasks } from "@/contexts/TaskContext";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,9 +22,6 @@ export default function CompletedTasksScreen() {
     <ScreenContainer scroll padded={false}>
       <View style={styles.padded}>
         <Text style={[styles.title, { color: colors.text }]}>Completed Tasks</Text>
-        <Text style={{ color: colors.textSecondary }}>
-          Your finished assignments archive
-        </Text>
       </View>
 
       <View style={[styles.list, styles.padded]}>

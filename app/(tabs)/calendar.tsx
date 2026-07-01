@@ -1,6 +1,6 @@
-import { BRAND_GREEN, cardShadow } from "@/constants/theme";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { TaskCard } from "@/components/TaskCard";
+import { BRAND_GREEN, cardShadow } from "@/constants/theme";
 import { useTasks } from "@/contexts/TaskContext";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -151,40 +151,40 @@ export default function CalendarScreen() {
 
 const styles = StyleSheet.create({
   padded: { paddingHorizontal: 20 },
-  calendarSection: { paddingTop: 8, paddingBottom: 20, gap: 12 },
+  calendarSection: { paddingTop: 12, paddingBottom: 24, gap: 16 },
   monthRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  monthLabel: { fontSize: 20, fontWeight: "800" },
+  monthLabel: { fontSize: 22, fontWeight: "800", fontFamily: "Roboto-Bold" },
   weekdays: { flexDirection: "row", justifyContent: "space-between" },
-  weekday: { width: "14.28%", textAlign: "center", fontWeight: "700", fontSize: 12 },
+  weekday: { width: "14.28%", textAlign: "center", fontWeight: "700", fontSize: 13, fontFamily: "Roboto-Bold" },
   grid: { flexDirection: "row", flexWrap: "wrap" },
   cell: {
     width: "14.28%",
     aspectRatio: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 3,
-    borderRadius: 12,
+    gap: 4,
+    borderRadius: 14,
   },
-  dot: { width: 5, height: 5, borderRadius: 3 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
   deadlineSection: {
     flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    paddingBottom: 32,
-    gap: 4,
-    minHeight: 280,
-  },
-  sectionTitle: { fontSize: 18, fontWeight: "800" },
-  sectionSub: { fontSize: 14, marginBottom: 12 },
-  list: { gap: 10 },
-  empty: {
-    borderRadius: 16,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 24,
+    paddingBottom: 36,
+    gap: 6,
+    minHeight: 300,
+  },
+  sectionTitle: { fontSize: 20, fontWeight: "800" },
+  sectionSub: { fontSize: 15, marginBottom: 14 },
+  list: { gap: 12 },
+  empty: {
+    borderRadius: 18,
+    padding: 28,
     alignItems: "center",
   },
 });

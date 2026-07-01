@@ -6,6 +6,14 @@ import { ThemeSync } from "@/components/ThemeSync";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { LogBox } from "react-native";
+
+LogBox.ignoreLogs([
+  "expo-notifications functionality is not fully supported in Expo Go",
+  "Android Push notifications (remote notifications) functionality provided by expo-notifications was removed from Expo Go",
+  "Supabase notification persistence failed",
+  "Supabase notification upsert failed",
+]);
 
 function RootNavigator() {
   const { isDark, colors } = useAppTheme();
@@ -35,15 +43,15 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <SettingsProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <SettingsProvider>
         <TaskProvider>
           <SubjectsProvider>
             <ThemeSync />
             <RootNavigator />
           </SubjectsProvider>
         </TaskProvider>
-      </AuthProvider>
-    </SettingsProvider>
+      </SettingsProvider>
+    </AuthProvider>
   );
 }

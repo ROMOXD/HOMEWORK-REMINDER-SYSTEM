@@ -1,21 +1,37 @@
-import { BRAND_GREEN, cardShadow } from "@/constants/theme";
+import { AppDialog } from "@/components/AppDialog";
 import { ScreenContainer } from "@/components/ScreenContainer";
+import { BRAND_GREEN, cardShadow } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { Ionicons } from "@expo/vector-icons";
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 export default function SettingsScreen() {
   const { settings, updateSettings } = useSettings();
   const { user } = useAuth();
   const { colors } = useAppTheme();
+  const [dialog, setDialog] = useState<{
+    title: string;
+    message: string;
+    actions?: { label: string; onPress: () => void; variant?: "primary" | "secondary" | "danger" }[];
+  } | null>(null);
+
+  const closeDialog = () => setDialog(null);
 
   const showAccountInfo = () => {
-    Alert.alert(
-      "Account Settings",
-      `Username: ${user?.username}\nEmail: ${user?.email}`,
-    );
+    setDialog({
+      title: "Account Settings",
+      message: `Username: ${user?.username}\nEmail: ${user?.email}`,
+      actions: [
+        {
+          label: "OK",
+          variant: "primary",
+          onPress: closeDialog,
+        },
+      ],
+    });
   };
 
   const toggleRows = [
@@ -34,12 +50,6 @@ export default function SettingsScreen() {
   ];
 
   const menuRows = [
-    {
-      title: "Language Settings",
-      subtitle: settings.language === "en" ? "English" : "Filipino",
-      onPress: () =>
-        updateSettings({ language: settings.language === "en" ? "fil" : "en" }),
-    },
     {
       title: "Account Settings",
       subtitle: user?.email ?? "",
@@ -94,6 +104,13 @@ export default function SettingsScreen() {
           </Pressable>
         ))}
       </View>
+      <AppDialog
+        visible={!!dialog}
+        title={dialog?.title ?? ""}
+        message={dialog?.message}
+        actions={dialog?.actions}
+        onClose={closeDialog}
+      />
     </ScreenContainer>
   );
 }

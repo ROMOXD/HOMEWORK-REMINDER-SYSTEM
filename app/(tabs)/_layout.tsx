@@ -1,5 +1,5 @@
-import { useAppTheme } from "@/hooks/use-app-theme";
 import { CustomTabBar } from "@/components/CustomTabBar";
+import { useAppTheme } from "@/hooks/use-app-theme";
 import { Tabs } from "expo-router";
 
 export default function TabsLayout() {
@@ -17,7 +17,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ headerShown: false }} />
-      <Tabs.Screen name="calendar" options={{ title: "Calendar" }} />
+      <Tabs.Screen name="chat" options={{ title: "Chat" }} />
       <Tabs.Screen name="notifications" options={{ title: "Notifications" }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
     </Tabs>

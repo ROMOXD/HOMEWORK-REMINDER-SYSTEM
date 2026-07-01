@@ -1,11 +1,12 @@
+import { SPACING, buttonShadow } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  ViewStyle,
-  type PressableProps,
+    ActivityIndicator,
+    Pressable,
+    StyleSheet,
+    Text,
+    ViewStyle,
+    type PressableProps,
 } from "react-native";
 
 type PrimaryButtonProps = Omit<PressableProps, "style"> & {
@@ -31,12 +32,18 @@ export function PrimaryButton({
       ? colors.primary
       : variant === "danger"
         ? colors.error
-        : colors.card;
+        : "transparent";
 
   const textColor =
     variant === "secondary" ? colors.primary : "#FFFFFF";
 
   const isPill = variant === "pill";
+
+  const shouldUseShadow = variant === "primary" || variant === "danger";
+  const shadowColor = variant === "danger" ? colors.error : colors.primary;
+  const variantShadow = shouldUseShadow
+    ? { ...buttonShadow, shadowColor }
+    : undefined;
 
   return (
     <Pressable
@@ -44,10 +51,12 @@ export function PrimaryButton({
       style={({ pressed }) => [
         styles.button,
         isPill && styles.pill,
+        !isPill && variantShadow,
         {
           backgroundColor,
           borderColor: variant === "secondary" ? colors.primary : backgroundColor,
-          opacity: isDisabled ? 0.6 : pressed ? 0.88 : 1,
+          borderWidth: variant === "secondary" ? 1 : 0,
+          opacity: isDisabled ? 0.6 : pressed ? 0.85 : 1,
         },
         style,
       ]}
@@ -66,24 +75,26 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 0,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.xl,
     alignItems: "center",
     justifyContent: "center",
   },
   pill: {
     borderRadius: 999,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
   },
   text: {
     fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: 0.8,
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
   pillText: {
     fontSize: 14,
+    fontWeight: "600",
     letterSpacing: 0.3,
   },
 });

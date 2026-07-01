@@ -1,21 +1,21 @@
+import { AppDialog } from "@/components/AppDialog";
 import { DateTimeCard } from "@/components/DateTimeCard";
 import { FormInput } from "@/components/FormInput";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { SubjectPicker } from "@/components/SubjectPicker";
 import { useTasks } from "@/contexts/TaskContext";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-  Alert,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -32,9 +32,21 @@ export default function TaskDetailsScreen() {
   const [reminderTime, setReminderTime] = useState(
     new Date(task?.reminderTime ?? Date.now()),
   );
-  const [showDuePicker, setShowDuePicker] = useState(false);
-  const [showReminderPicker, setShowReminderPicker] = useState(false);
+  const [showDueDatePicker, setShowDueDatePicker] = useState(false);
+  const [showDueTimePicker, setShowDueTimePicker] = useState(false);
+  const [showReminderDatePicker, setShowReminderDatePicker] = useState(false);
+  const [showReminderTimePicker, setShowReminderTimePicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dialog, setDialog] = useState<{
+    title: string;
+    message: string;
+    actions?: { label: string; onPress: () => void; variant?: "primary" | "secondary" | "danger" }[];
+  } | null>(null);
+
+  const closeDialog = () => setDialog(null);
+
+  const isDismissed = (event: any) =>
+    event?.type === "dismissed" || event?.nativeEvent?.action === "dismissed";
 
   if (!task) {
     return (
@@ -46,7 +58,7 @@ export default function TaskDetailsScreen() {
 
   const handleSave = async () => {
     if (!title.trim() || !description.trim()) {
-      Alert.alert("Missing Fields", "Please Fill Out All Fields");
+      setDialog({ title: "Missing Fields", message: "Please Fill Out All Fields" });
       return;
     }
 
@@ -57,17 +69,94 @@ export default function TaskDetailsScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          await deleteTask(task.id);
-          router.back();
+    setDialog({
+      title: "Delete Task",
+      message: "Are you sure you want to delete this task?",
+      actions: [
+        { label: "Cancel", variant: "secondary", onPress: closeDialog },
+        {
+          label: "Delete",
+          variant: "danger",
+          onPress: async () => {
+            closeDialog();
+            await deleteTask(task.id);
+            router.back();
+          },
         },
-      },
-    ]);
+      ],
+    });
+  };
+
+  const handleDueDateChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowDueDatePicker(false);
+      if (isDismissed(_event) || !selectedDate) {
+        setShowDueTimePicker(false);
+        return;
+      }
+      const nextDate = new Date(dueDate);
+      nextDate.setFullYear(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+      );
+      setDueDate(nextDate);
+      setShowDueTimePicker(true);
+      return;
+    }
+
+    if (selectedDate) setDueDate(selectedDate);
+    setShowDueDatePicker(Platform.OS === "ios");
+  };
+
+  const handleDueTimeChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowDueTimePicker(false);
+      if (isDismissed(_event) || !selectedDate) return;
+      const nextDate = new Date(dueDate);
+      nextDate.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+      setDueDate(nextDate);
+      return;
+    }
+
+    if (selectedDate) setDueDate(selectedDate);
+    setShowDueDatePicker(Platform.OS === "ios");
+  };
+
+  const handleReminderDateChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowReminderDatePicker(false);
+      if (isDismissed(_event) || !selectedDate) {
+        setShowReminderTimePicker(false);
+        return;
+      }
+      const nextReminder = new Date(reminderTime);
+      nextReminder.setFullYear(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+      );
+      setReminderTime(nextReminder);
+      setShowReminderTimePicker(true);
+      return;
+    }
+
+    if (selectedDate) setReminderTime(selectedDate);
+    setShowReminderDatePicker(Platform.OS === "ios");
+  };
+
+  const handleReminderTimeChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowReminderTimePicker(false);
+      if (isDismissed(_event) || !selectedDate) return;
+      const nextReminder = new Date(reminderTime);
+      nextReminder.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+      setReminderTime(nextReminder);
+      return;
+    }
+
+    if (selectedDate) setReminderTime(selectedDate);
+    setShowReminderDatePicker(Platform.OS === "ios");
   };
 
   const handleToggleComplete = async () => {
@@ -94,33 +183,41 @@ export default function TaskDetailsScreen() {
               label="Due Date"
               value={dueDate}
               icon="calendar-outline"
-              onPress={() => setShowDuePicker(true)}
+              onPress={() => setShowDueDatePicker(true)}
             />
             <DateTimeCard
               label="Reminder"
               value={reminderTime}
               icon="time-outline"
-              onPress={() => setShowReminderPicker(true)}
+              onPress={() => setShowReminderDatePicker(true)}
             />
           </View>
-          {showDuePicker ? (
+          {showDueDatePicker ? (
             <DateTimePicker
               value={dueDate}
-              mode="datetime"
-              onChange={(_, date) => {
-                setShowDuePicker(Platform.OS === "ios");
-                if (date) setDueDate(date);
-              }}
+              mode={Platform.OS === "android" ? "date" : "datetime"}
+              onChange={handleDueDateChange}
             />
           ) : null}
-          {showReminderPicker ? (
+          {showDueTimePicker ? (
+            <DateTimePicker
+              value={dueDate}
+              mode="time"
+              onChange={handleDueTimeChange}
+            />
+          ) : null}
+          {showReminderDatePicker ? (
             <DateTimePicker
               value={reminderTime}
-              mode="datetime"
-              onChange={(_, date) => {
-                setShowReminderPicker(Platform.OS === "ios");
-                if (date) setReminderTime(date);
-              }}
+              mode={Platform.OS === "android" ? "date" : "datetime"}
+              onChange={handleReminderDateChange}
+            />
+          ) : null}
+          {showReminderTimePicker ? (
+            <DateTimePicker
+              value={reminderTime}
+              mode="time"
+              onChange={handleReminderTimeChange}
             />
           ) : null}
           <PrimaryButton title="Save Changes" loading={loading} onPress={handleSave} />
@@ -176,6 +273,13 @@ export default function TaskDetailsScreen() {
           </Pressable>
         </View>
       </View>
+      <AppDialog
+        visible={!!dialog}
+        title={dialog?.title ?? ""}
+        message={dialog?.message}
+        actions={dialog?.actions}
+        onClose={closeDialog}
+      />
     </SafeAreaView>
   );
 }

@@ -1,4 +1,4 @@
-import { cardShadow } from "@/constants/theme";
+import { cardShadow, SPACING } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import type { Task } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +25,7 @@ export function TaskCard({ task, variant = "default" }: TaskCardProps) {
         {
           backgroundColor: colors.card,
           borderColor: colors.border,
-          opacity: pressed ? 0.94 : isCompleted ? 0.85 : 1,
+          opacity: pressed ? 0.92 : isCompleted ? 0.8 : 1,
         },
       ]}
     >
@@ -73,9 +73,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     overflow: "hidden",
+    marginVertical: SPACING.sm,
   },
-  accent: { width: 4 },
-  content: { flex: 1, padding: 16, gap: 6 },
+  accent: { width: 5 },
+  content: { flex: 1, padding: SPACING.lg, gap: SPACING.md },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -83,11 +84,11 @@ const styles = StyleSheet.create({
   },
   badge: {
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
   },
-  badgeText: { fontSize: 11, fontWeight: "800" },
-  title: { fontSize: 17, fontWeight: "800" },
-  description: { fontSize: 14, lineHeight: 20 },
-  due: { fontSize: 12, fontWeight: "700" },
+  badgeText: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3 },
+  title: { fontSize: 16, fontWeight: "600", lineHeight: 22 },
+  description: { fontSize: 13, lineHeight: 20, fontWeight: "500" },
+  due: { fontSize: 12, fontWeight: "500" },
 });

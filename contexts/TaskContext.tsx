@@ -1,17 +1,18 @@
+import type { Subject } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { getItem, setItem, StorageKeys } from "@/lib/storage";
+import supabase, { hasSupabase } from "@/lib/supabase";
 import type { AppNotification, Task } from "@/types";
-import type { Subject } from "@/constants/theme";
 import * as Notifications from "expo-notifications";
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+    type ReactNode,
 } from "react";
 
 Notifications.setNotificationHandler({
@@ -46,11 +47,27 @@ type TaskContextValue = {
 const TaskContext = createContext<TaskContextValue | null>(null);
 
 function createId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const randomValue =
+      typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function"
+        ? crypto.getRandomValues(new Uint8Array(1))[0] & 0x0f
+        : Math.floor(Math.random() * 16);
+    const value = c === "x" ? randomValue : (randomValue & 0x3) | 0x8;
+    return value.toString(16);
+  });
 }
 
 function toDateString(date: Date) {
   return date.toISOString();
+}
+
+function isExpectedSupabaseNotificationError(err: unknown) {
+  const message = err instanceof Error ? err.message : String(err ?? "");
+  return message.includes("foreign key constraint") || message.includes("violates foreign key constraint");
 }
 
 async function scheduleReminder(task: Task, enabled: boolean) {
@@ -80,6 +97,51 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const persistTasks = useCallback(async (next: Task[]) => {
+    if (hasSupabase && supabase && user) {
+      try {
+        const dbTasksRes = await supabase.from("tasks").select("id").eq("user_id", user.id);
+        if (dbTasksRes.error) {
+          console.error("Supabase task select failed:", dbTasksRes.error);
+          throw dbTasksRes.error;
+        }
+
+        const dbTasks = Array.isArray(dbTasksRes.data) ? dbTasksRes.data.map((r: any) => r.id) : [];
+        const nextIds = next.map((t) => t.id);
+
+        const upserts = next.map((t) => ({
+          id: t.id,
+          user_id: t.userId,
+          title: t.title,
+          subject: t.subject,
+          description: t.description,
+          due_date: t.dueDate,
+          reminder_time: t.reminderTime,
+          completed: t.completed,
+          completed_at: t.completedAt ?? null,
+          created_at: t.createdAt,
+        }));
+
+        const upsertRes = await supabase.from("tasks").upsert(upserts);
+        if (upsertRes.error) {
+          console.error("Supabase task upsert failed:", upsertRes.error);
+          throw upsertRes.error;
+        }
+
+        const toDelete = dbTasks.filter((id: string) => !nextIds.includes(id));
+        if (toDelete.length > 0) {
+          const deleteRes = await supabase.from("tasks").delete().in("id", toDelete);
+          if (deleteRes.error) {
+            console.error("Supabase task delete failed:", deleteRes.error);
+            throw deleteRes.error;
+          }
+        }
+
+        return;
+      } catch (err: any) {
+        console.error("Supabase persistence failed, falling back to local storage:", err.message ?? err);
+      }
+    }
+
     const all = await getItem<Task[]>(StorageKeys.tasks, []);
     const others = all.filter((task) => task.userId !== user?.id);
     await setItem(StorageKeys.tasks, [...others, ...next]);
@@ -87,6 +149,60 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const persistNotifications = useCallback(
     async (next: AppNotification[]) => {
+      if (hasSupabase && supabase && user) {
+        try {
+          const dbNotificationsRes = await supabase
+            .from("notifications")
+            .select("id")
+            .eq("user_id", user.id);
+
+          if (dbNotificationsRes.error) {
+            console.error("Supabase notifications select failed:", dbNotificationsRes.error);
+            throw dbNotificationsRes.error;
+          }
+
+          const dbNotifications = Array.isArray(dbNotificationsRes.data)
+            ? dbNotificationsRes.data.map((r: any) => r.id)
+            : [];
+          const nextIds = next.map((item) => item.id);
+
+          const upserts = next.map((item) => ({
+            id: item.id,
+            user_id: item.userId,
+            task_id: item.taskId ?? null,
+            title: item.title,
+            message: item.message,
+            type: item.type,
+            read: item.read,
+            created_at: item.createdAt,
+          }));
+
+          const upsertRes = await supabase.from("notifications").upsert(upserts);
+          if (upsertRes.error) {
+            console.error("Supabase notification upsert failed:", upsertRes.error);
+            throw upsertRes.error;
+          }
+
+          const toDelete = dbNotifications.filter((id: string) => !nextIds.includes(id));
+          if (toDelete.length > 0) {
+            const deleteRes = await supabase.from("notifications").delete().in("id", toDelete);
+            if (deleteRes.error) {
+              console.error("Supabase notification delete failed:", deleteRes.error);
+              throw deleteRes.error;
+            }
+          }
+
+          return;
+        } catch (err: any) {
+          if (!isExpectedSupabaseNotificationError(err)) {
+            console.error(
+              "Supabase notification persistence failed, falling back to local storage:",
+              err.message ?? err,
+            );
+          }
+        }
+      }
+
       const all = await getItem<AppNotification[]>(StorageKeys.notifications, []);
       const others = all.filter((item) => item.userId !== user?.id);
       await setItem(StorageKeys.notifications, [...others, ...next]);
@@ -102,16 +218,68 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    Promise.all([
-      getItem<Task[]>(StorageKeys.tasks, []),
-      getItem<AppNotification[]>(StorageKeys.notifications, []),
-    ]).then(([allTasks, allNotifications]) => {
-      setTasks(allTasks.filter((task) => task.userId === user.id));
-      setNotifications(
-        allNotifications.filter((item) => item.userId === user.id),
-      );
+    (async () => {
+      if (hasSupabase && supabase) {
+        try {
+          const [tasksRes, notificationsRes] = await Promise.all([
+            supabase.from("tasks").select("*").eq("user_id", user.id),
+            supabase.from("notifications").select("*").eq("user_id", user.id),
+          ]);
+
+          if (!tasksRes.error && Array.isArray(tasksRes.data)) {
+            const mappedTasks: Task[] = tasksRes.data.map((t: any) => ({
+              id: t.id,
+              userId: t.user_id,
+              title: t.title,
+              subject: t.subject,
+              description: t.description,
+              dueDate: t.due_date,
+              reminderTime: t.reminder_time,
+              completed: !!t.completed,
+              completedAt: t.completed_at ?? undefined,
+              createdAt: t.created_at,
+            }));
+            setTasks(mappedTasks);
+          } else {
+            if (tasksRes.error) console.error("Supabase task fetch failed:", tasksRes.error);
+            setTasks([]);
+          }
+
+          if (!notificationsRes.error && Array.isArray(notificationsRes.data)) {
+            const mappedNotifications: AppNotification[] = notificationsRes.data.map((n: any) => ({
+              id: n.id,
+              userId: n.user_id,
+              taskId: n.task_id ?? undefined,
+              title: n.title,
+              message: n.message,
+              type: n.type,
+              read: !!n.read,
+              createdAt: n.created_at,
+            }));
+            setNotifications(mappedNotifications);
+          } else {
+            if (notificationsRes.error) console.error("Supabase notification fetch failed:", notificationsRes.error);
+            setNotifications([]);
+          }
+        } catch (err: any) {
+          console.error("Supabase task/notification load failed:", err.message ?? err);
+          setTasks([]);
+          setNotifications([]);
+        }
+      } else {
+        const [allTasks, allNotifications] = await Promise.all([
+          getItem<Task[]>(StorageKeys.tasks, []),
+          getItem<AppNotification[]>(StorageKeys.notifications, []),
+        ]);
+
+        setTasks(allTasks.filter((task) => task.userId === user.id));
+        setNotifications(
+          allNotifications.filter((item) => item.userId === user.id),
+        );
+      }
+
       setIsLoading(false);
-    });
+    })();
   }, [user]);
 
   const addNotification = useCallback(
@@ -152,9 +320,9 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       };
 
       setTasks((current) => {
-        const next = [task, ...current];
-        void persistTasks(next);
-        return next;
+        const nextTasks = [task, ...current];
+        void persistTasks(nextTasks);
+        return nextTasks;
       });
 
       await addNotification({

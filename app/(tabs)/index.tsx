@@ -1,7 +1,7 @@
-import { BRAND_GREEN } from "@/constants/theme";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SubjectFilter } from "@/components/SubjectFilter";
 import { TaskCard } from "@/components/TaskCard";
+import { BRAND_GREEN, SPACING } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTasks } from "@/contexts/TaskContext";
 import { useAppTheme } from "@/hooks/use-app-theme";
@@ -53,7 +53,7 @@ export default function HomeScreen() {
             style={[styles.avatarRing, { borderColor: BRAND_GREEN }]}
           >
             <View style={[styles.avatar, { backgroundColor: colors.primaryTint }]}>
-              <Ionicons name="person" size={22} color={BRAND_GREEN} />
+              <Ionicons name="person" size={24} color={BRAND_GREEN} />
             </View>
           </Pressable>
         </View>
@@ -141,56 +141,56 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.md,
   },
-  headerText: { flex: 1, gap: 2 },
-  greeting: { fontSize: 26, fontWeight: "800" },
-  subGreeting: { fontSize: 14 },
+  headerText: { flex: 1, gap: SPACING.sm },
+  greeting: { fontSize: 28, fontWeight: "700" },
+  subGreeting: { fontSize: 14, fontWeight: "500" },
   avatarRing: {
-    borderWidth: 2.5,
-    borderRadius: 28,
-    padding: 2,
+    borderWidth: 2,
+    borderRadius: 32,
+    padding: 3,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
   },
-  padded: { paddingHorizontal: 20, gap: 14 },
+  padded: { paddingHorizontal: SPACING.xl, gap: SPACING.lg },
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: SPACING.md,
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
   },
-  search: { flex: 1, fontSize: 16 },
+  search: { flex: 1, fontSize: 16, fontWeight: "500" },
   tabRow: {
     flexDirection: "row",
-    borderRadius: 14,
-    padding: 4,
-    gap: 4,
+    borderRadius: 12,
+    padding: SPACING.sm,
+    gap: SPACING.sm,
   },
   tab: {
     flex: 1,
     borderRadius: 10,
-    paddingVertical: 10,
+    paddingVertical: SPACING.md,
     alignItems: "center",
   },
-  tabText: { fontSize: 13, fontWeight: "700" },
-  list: { gap: 12, paddingBottom: 110 },
+  tabText: { fontSize: 14, fontWeight: "600" },
+  list: { gap: SPACING.lg, paddingBottom: 120 },
   empty: {
     borderWidth: 1,
     borderRadius: 16,
-    padding: 28,
-    gap: 8,
+    padding: SPACING.xxxl,
+    gap: SPACING.lg,
     alignItems: "center",
   },
-  emptyTitle: { fontSize: 18, fontWeight: "700" },
+  emptyTitle: { fontSize: 18, fontWeight: "600" },
 });

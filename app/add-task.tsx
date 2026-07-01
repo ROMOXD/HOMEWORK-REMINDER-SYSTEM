@@ -1,3 +1,4 @@
+import { AppDialog } from "@/components/AppDialog";
 import { DateTimeCard } from "@/components/DateTimeCard";
 import { FormInput } from "@/components/FormInput";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -9,7 +10,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Stack, router } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -27,13 +27,97 @@ export default function AddTaskScreen() {
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(new Date(Date.now() + 86400000));
   const [reminderTime, setReminderTime] = useState(new Date(Date.now() + 3600000));
-  const [showDuePicker, setShowDuePicker] = useState(false);
-  const [showReminderPicker, setShowReminderPicker] = useState(false);
+  const [showDueDatePicker, setShowDueDatePicker] = useState(false);
+  const [showDueTimePicker, setShowDueTimePicker] = useState(false);
+  const [showReminderDatePicker, setShowReminderDatePicker] = useState(false);
+  const [showReminderTimePicker, setShowReminderTimePicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dialog, setDialog] = useState<{
+    title: string;
+    message: string;
+    actions?: { label: string; onPress: () => void; variant?: "primary" | "secondary" | "danger" }[];
+  } | null>(null);
+
+  const closeDialog = () => setDialog(null);
+
+  const isDismissed = (event: any) =>
+    event?.type === "dismissed" || event?.nativeEvent?.action === "dismissed";
+
+  const handleDueDateChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowDueDatePicker(false);
+      if (isDismissed(_event) || !selectedDate) {
+        setShowDueTimePicker(false);
+        return;
+      }
+      const nextDate = new Date(dueDate);
+      nextDate.setFullYear(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+      );
+      setDueDate(nextDate);
+      setShowDueTimePicker(true);
+      return;
+    }
+
+    if (selectedDate) setDueDate(selectedDate);
+    setShowDueDatePicker(Platform.OS === "ios");
+  };
+
+  const handleDueTimeChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowDueTimePicker(false);
+      if (isDismissed(_event) || !selectedDate) return;
+      const nextDate = new Date(dueDate);
+      nextDate.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+      setDueDate(nextDate);
+      return;
+    }
+
+    if (selectedDate) setDueDate(selectedDate);
+    setShowDueDatePicker(Platform.OS === "ios");
+  };
+
+  const handleReminderDateChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowReminderDatePicker(false);
+      if (isDismissed(_event) || !selectedDate) {
+        setShowReminderTimePicker(false);
+        return;
+      }
+      const nextReminder = new Date(reminderTime);
+      nextReminder.setFullYear(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+      );
+      setReminderTime(nextReminder);
+      setShowReminderTimePicker(true);
+      return;
+    }
+
+    if (selectedDate) setReminderTime(selectedDate);
+    setShowReminderDatePicker(Platform.OS === "ios");
+  };
+
+  const handleReminderTimeChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowReminderTimePicker(false);
+      if (isDismissed(_event) || !selectedDate) return;
+      const nextReminder = new Date(reminderTime);
+      nextReminder.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+      setReminderTime(nextReminder);
+      return;
+    }
+
+    if (selectedDate) setReminderTime(selectedDate);
+    setShowReminderDatePicker(Platform.OS === "ios");
+  };
 
   const handleSave = async () => {
     if (!title.trim() || !description.trim()) {
-      Alert.alert("Missing Fields", "Please Fill Out All Fields");
+      setDialog({ title: "Missing Fields", message: "Please Fill Out All Fields" });
       return;
     }
 
@@ -70,7 +154,7 @@ export default function AddTaskScreen() {
           label="Task Title"
           value={title}
           onChangeText={setTitle}
-          placeholder="e.g. Chapter 5 Worksheet"
+          placeholder="Chapter 5 Worksheet"
         />
 
         <Text style={[styles.label, { color: colors.text }]}>Subject</Text>
@@ -90,37 +174,53 @@ export default function AddTaskScreen() {
             label="Due Date"
             value={dueDate}
             icon="calendar-outline"
-            onPress={() => setShowDuePicker(true)}
+            onPress={() => setShowDueDatePicker(true)}
           />
           <DateTimeCard
             label="Reminder Time"
             value={reminderTime}
             icon="time-outline"
-            onPress={() => setShowReminderPicker(true)}
+            onPress={() => setShowReminderDatePicker(true)}
           />
         </View>
 
-        {showDuePicker ? (
+        {showDueDatePicker ? (
           <DateTimePicker
             value={dueDate}
-            mode="datetime"
-            onChange={(_, date) => {
-              setShowDuePicker(Platform.OS === "ios");
-              if (date) setDueDate(date);
-            }}
+            mode={Platform.OS === "android" ? "date" : "datetime"}
+            onChange={handleDueDateChange}
           />
         ) : null}
-        {showReminderPicker ? (
+        {showDueTimePicker ? (
+          <DateTimePicker
+            value={dueDate}
+            mode="time"
+            onChange={handleDueTimeChange}
+          />
+        ) : null}
+
+        {showReminderDatePicker ? (
           <DateTimePicker
             value={reminderTime}
-            mode="datetime"
-            onChange={(_, date) => {
-              setShowReminderPicker(Platform.OS === "ios");
-              if (date) setReminderTime(date);
-            }}
+            mode={Platform.OS === "android" ? "date" : "datetime"}
+            onChange={handleReminderDateChange}
+          />
+        ) : null}
+        {showReminderTimePicker ? (
+          <DateTimePicker
+            value={reminderTime}
+            mode="time"
+            onChange={handleReminderTimeChange}
           />
         ) : null}
       </ScrollView>
+      <AppDialog
+        visible={!!dialog}
+        title={dialog?.title ?? ""}
+        message={dialog?.message}
+        actions={dialog?.actions}
+        onClose={closeDialog}
+      />
     </SafeAreaView>
   );
 }
@@ -132,14 +232,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderBottomWidth: 1,
   },
-  cancel: { fontSize: 16, fontWeight: "600", width: 70 },
-  navTitle: { fontSize: 17, fontWeight: "800" },
+  cancel: { fontSize: 16, fontWeight: "600", fontFamily: "Roboto-Medium", width: 70 },
+  navTitle: { fontSize: 18, fontWeight: "800", fontFamily: "Roboto-Bold" },
   saveBtn: { width: 80 },
-  form: { padding: 24, gap: 18, paddingBottom: 40 },
-  label: { fontSize: 14, fontWeight: "600" },
-  multiline: { minHeight: 110, textAlignVertical: "top" },
-  dateRow: { flexDirection: "row", gap: 12 },
+  form: { padding: 28, gap: 20, paddingBottom: 40 },
+  label: { fontSize: 15, fontWeight: "700", fontFamily: "Roboto-Bold" },
+  multiline: { minHeight: 120, textAlignVertical: "top" },
+  dateRow: { flexDirection: "row", gap: 14 },
 });

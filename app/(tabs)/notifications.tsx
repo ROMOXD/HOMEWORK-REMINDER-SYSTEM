@@ -1,5 +1,5 @@
-import { BRAND_GREEN, cardShadow } from "@/constants/theme";
 import { ScreenContainer } from "@/components/ScreenContainer";
+import { BRAND_GREEN, cardShadow } from "@/constants/theme";
 import { useTasks } from "@/contexts/TaskContext";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { timeAgo } from "@/lib/format-time";
@@ -16,10 +16,10 @@ export default function NotificationsScreen() {
 
   return (
     <ScreenContainer>
-      <View style={[styles.page, { backgroundColor: colors.backgroundMuted }]}>
+      <View style={styles.page}>
         {sorted.length === 0 ? (
-          <View style={[styles.empty, cardShadow, { backgroundColor: colors.card }]}>
-            <Ionicons name="notifications-off-outline" size={40} color={colors.textMuted} />
+          <View style={[styles.empty, { backgroundColor: "transparent" }]}> 
+            <Ionicons name="notifications-off-outline" size={44} color={colors.textMuted} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
               No notifications yet
             </Text>
@@ -32,12 +32,13 @@ export default function NotificationsScreen() {
             <Pressable
               key={item.id}
               onPress={() => markNotificationRead(item.id)}
-              style={[
+              style={({ pressed }) => [
                 styles.card,
                 cardShadow,
                 {
                   backgroundColor: colors.card,
-                  opacity: item.read ? 0.82 : 1,
+                  opacity: pressed ? 0.9 : item.read ? 0.85 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
                 },
               ]}
             >
@@ -47,16 +48,16 @@ export default function NotificationsScreen() {
                 <View style={styles.dotSpacer} />
               )}
               <View style={styles.cardBody}>
-                <Text style={[styles.cardTitle, { color: colors.text }]}>
+                <Text style={[styles.cardTitle, { color: colors.text, fontFamily: "Roboto-Bold" }]}>
                   {item.title}
                 </Text>
                 <Text
                   numberOfLines={2}
-                  style={[styles.snippet, { color: colors.textSecondary }]}
+                  style={[styles.snippet, { color: colors.textSecondary, fontFamily: "Roboto-Regular" }]}
                 >
                   {item.message}
                 </Text>
-                <Text style={[styles.time, { color: colors.textMuted }]}>
+                <Text style={[styles.time, { color: colors.textMuted, fontFamily: "Roboto-Regular" }]}>
                   {timeAgo(item.createdAt)}
                 </Text>
               </View>
@@ -69,31 +70,31 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { gap: 10, marginHorizontal: -4, paddingBottom: 20 },
+  page: { gap: 12, marginHorizontal: -4, paddingBottom: 20 },
   card: {
     flexDirection: "row",
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
+    borderRadius: 18,
+    padding: 18,
+    gap: 14,
     alignItems: "flex-start",
   },
   unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginTop: 5,
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    marginTop: 6,
   },
-  dotSpacer: { width: 10 },
-  cardBody: { flex: 1, gap: 4 },
-  cardTitle: { fontSize: 16, fontWeight: "800" },
-  snippet: { fontSize: 14, lineHeight: 20 },
-  time: { fontSize: 12, fontWeight: "600", marginTop: 2 },
+  dotSpacer: { width: 11 },
+  cardBody: { flex: 1, gap: 6 },
+  cardTitle: { fontSize: 16, fontWeight: "700" },
+  snippet: { fontSize: 14, lineHeight: 21 },
+  time: { fontSize: 13, fontWeight: "500", marginTop: 3 },
   empty: {
-    borderRadius: 16,
-    padding: 32,
-    gap: 10,
+    borderRadius: 20,
+    padding: 36,
+    gap: 12,
     alignItems: "center",
-    marginTop: 40,
+    marginTop: 48,
   },
-  emptyTitle: { fontSize: 18, fontWeight: "700" },
+  emptyTitle: { fontSize: 19, fontWeight: "700" },
 });
